@@ -87,8 +87,9 @@ pub fn main() !void {
     var new: u64 = 0;
     while (true) {
         // You can now poll for USB events
-        rp2xxx.usb.Usb.task(
+        _ = rp2xxx.usb.Usb.task(
             false, // debug output over UART [Y/n]
+            "",
         ) catch unreachable;
 
         new = time.get_time_since_boot().to_us();

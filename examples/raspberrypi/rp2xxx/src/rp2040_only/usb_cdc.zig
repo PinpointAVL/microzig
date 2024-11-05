@@ -83,14 +83,22 @@ pub fn main() !void {
     rp2xxx.usb.Usb.init_device(&DEVICE_CONFIGURATION) catch unreachable;
     var old: u64 = time.get_time_since_boot().to_us();
     var new: u64 = 0;
+    var rx_array: [64]u8 = undefined;
+    const rx_buffer = rx_array[0..];
 
     var i: u32 = 0;
     var buf: [1024]u8 = undefined;
     while (true) {
         // You can now poll for USB events
-        rp2xxx.usb.Usb.task(
+        const recvdBytes = rp2xxx.usb.Usb.task(
             false, // debug output over UART [Y/n]
+            rx_buffer,
         ) catch unreachable;
+
+        if (recvdBytes > 0) {
+            const text = std.fmt.bufPrint(&buf, "Got ({}): {s}\r\n", .{ recvdBytes, rx_buffer[0..recvdBytes] }) catch &.{};
+            driver_cdc.write(text);
+        }
 
         new = time.get_time_since_boot().to_us();
         if (new - old > 500000) {
